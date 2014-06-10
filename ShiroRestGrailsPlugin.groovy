@@ -1,3 +1,5 @@
+import com.iamedu.shiro.rest.*
+
 class ShiroRestGrailsPlugin {
   // the plugin version
   def version = "0.1.0-SNAPSHOT"
@@ -5,7 +7,7 @@ class ShiroRestGrailsPlugin {
   def grailsVersion = "2.4 > *"
   // resources that are excluded from plugin packaging
   def pluginExcludes = [
-      "grails-app/views/error.gsp"
+      "grails-app/views/**"
   ]
 
   // TODO Fill in these fields
@@ -41,7 +43,16 @@ class ShiroRestGrailsPlugin {
   }
 
   def doWithSpring = {
-      // TODO Implement runtime spring config (optional)
+    def shiroRestConfig = application.config.security.shiro.rest
+
+
+    log.info "Defining shiro rest config :)"
+    shiroRestSessionManager(ShiroRestSessionManager)
+
+    if(!shiroRestConfig.tokenName) {
+      log.info "Setting default token name X-Auth-Token"
+      shiroRestconfig.tokenName = 'X-Auth-Token'
+    }
   }
 
   def doWithDynamicMethods = { ctx ->
@@ -49,21 +60,27 @@ class ShiroRestGrailsPlugin {
   }
 
   def doWithApplicationContext = { ctx ->
-      // TODO Implement post initialization spring config (optional)
+    def securityManager = applicationContext.getBean("shiroSecurityManager")
+    def restSessionManager = applicationContext.getBean("shiroRestSessionManager")
+
+    if(securityManager) {
+      log.info "Binding shiro rest security manager"
+      securityManager.sessionManager = restSessionManager
+    }
   }
 
   def onChange = { event ->
-      // TODO Implement code that is executed when any artefact that this plugin is
-      // watching is modified and reloaded. The event contains: event.source,
-      // event.application, event.manager, event.ctx, and event.plugin.
+    // TODO Implement code that is executed when any artefact that this plugin is
+    // watching is modified and reloaded. The event contains: event.source,
+    // event.application, event.manager, event.ctx, and event.plugin.
   }
 
   def onConfigChange = { event ->
-      // TODO Implement code that is executed when the project configuration changes.
-      // The event is the same as for 'onChange'.
+    // TODO Implement code that is executed when the project configuration changes.
+    // The event is the same as for 'onChange'.
   }
 
   def onShutdown = { event ->
-      // TODO Implement code that is executed when the application shuts down (optional)
+    // TODO Implement code that is executed when the application shuts down (optional)
   }
 }
